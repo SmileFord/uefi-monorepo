@@ -522,10 +522,11 @@ PollRegisterWithMask (
 {
   UINTN RetryCount = 0;
 
+  /* timeout: 100us * 1000 = 100ms*/
   while (RetryCount < MAX_RETRY_COUNT) {
     if ((MmioRead32 (Register) & Mask) != ExpectedValue) {
       RetryCount++;
-      MicroSecondDelay(2);
+      MicroSecondDelay(100);
     } else {
       break;
     }
