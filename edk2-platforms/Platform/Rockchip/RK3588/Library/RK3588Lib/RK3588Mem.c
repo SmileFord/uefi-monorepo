@@ -36,6 +36,11 @@ STATIC struct RK3588ReservedMemory {
   { 0x08400000, 0x01000000 },    // TEE OS
   { 0xF0000000, 0x10000000 },    // REG
   { 0x180000000, 0x00001000 },	 // for grub test
+  { 0x200000000, 0x00001000 },	 // for grub test
+  { 0x280000000, 0x00001000 },	 // for grub test
+  { 0x300000000, 0x00001000 },	 // for grub test
+  { 0x380000000, 0x00001000 },	 // for grub test
+  { 0x3FC000000, 0x4000000 },	 // reserved memory
 };
 
 STATIC
@@ -186,13 +191,6 @@ ArmPlatformGetVirtualMemoryMap (
   );
 
   if (MemorySize >= PcdGet64 (PcdSystemMemorySize)) {
-    ResourceAttributes =
-    EFI_RESOURCE_ATTRIBUTE_PRESENT |
-    EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE |
-    EFI_RESOURCE_ATTRIBUTE_TESTED;
     AdditionalMemorySize = MemorySize - PcdGet64 (PcdSystemMemorySize);
     if (MemorySize > RK3588_PERIPH_BASE)
       AdditionalMemorySize = RK3588_PERIPH_BASE - PcdGet64 (PcdSystemMemorySize);
@@ -209,6 +207,13 @@ ArmPlatformGetVirtualMemoryMap (
         ResourceAttributes,
         SIZE_4GB,
         MemorySize - SIZE_4GB);
+
+	  /* 256MB REG remap */
+	  BuildResourceDescriptorHob (
+		EFI_RESOURCE_SYSTEM_MEMORY,
+		ResourceAttributes,
+		MemorySize + SIZE_4GB - 0x10000000,
+		0x10000000);
     }
   }
 
@@ -263,6 +268,12 @@ ArmPlatformGetVirtualMemoryMap (
     VirtualMemoryTable[Index].VirtualBase    = SIZE_4GB;
     VirtualMemoryTable[Index].Length         = MemorySize - SIZE_4GB;
     VirtualMemoryTable[Index].Attributes     = CacheAttributes;
+
+	/* 256MB REG remap */
+	VirtualMemoryTable[++Index].PhysicalBase = MemorySize + SIZE_4GB - 0x10000000;
+	VirtualMemoryTable[Index].VirtualBase	 = MemorySize + SIZE_4GB - 0x10000000;
+	VirtualMemoryTable[Index].Length		 = 0x10000000;
+	VirtualMemoryTable[Index].Attributes	 = CacheAttributes;
   }
 
   // End of Table
